@@ -10,7 +10,7 @@ export type WorkOrderStatus =
 
 export type Priority = "low" | "medium" | "high" | "critical";
 
-export type UserRole = "technician" | "supervisor" | "admin";
+export type UserRole = "technician" | "supervisor";
 
 export interface User {
   id: string;
@@ -19,7 +19,7 @@ export interface User {
   role: UserRole;
   phone?: string;
   languagePreference: Language;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface Technician extends User {
