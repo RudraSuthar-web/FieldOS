@@ -156,11 +156,23 @@ class GnaniSpeechService(SpeechService):
 
             # Empty transcript returned by Prisma
             logger.warning(f"Gnani Prisma STT returned empty transcript: {result}")
+            if not settings.is_production:
+                fallback = self._fallback_transcription(language)
+                logger.info(f"Using development fallback transcript: {fallback}")
+                return fallback
             raise ValueError("No intelligible speech detected in the audio. Please hold the button, speak closer to the mic, and try again.")
         except ValueError:
+            if not settings.is_production:
+                fallback = self._fallback_transcription(language)
+                logger.info(f"Using development fallback transcript: {fallback}")
+                return fallback
             raise
         except Exception as exc:
             logger.error(f"Gnani Prisma STT request failed: {exc}")
+            if not settings.is_production:
+                fallback = self._fallback_transcription(language)
+                logger.info(f"Gnani STT encountered error; using development fallback: {fallback}")
+                return fallback
             raise RuntimeError(f"Gnani Prisma STT error: {exc}")
 
     def _fallback_transcription(self, language: str) -> str:

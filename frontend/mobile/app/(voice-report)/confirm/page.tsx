@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Mic } from "lucide-react";
+import { Mic, Quote } from "lucide-react";
 import { Button, InlineAlert, Skeleton, EmptyState, reportApi, voiceApi } from "@fieldos/shared";
 import { MobileFrame } from "../../../components/layout/MobileFrame";
 import { ExtractionReview, type ReviewField } from "../../../components/voice/ExtractionReview";
@@ -100,11 +100,13 @@ export default function ConfirmPage() {
       });
 
       const extracted = { ...rawResult.extracted, ...updatedFields };
+      const machineNum = extracted.equipment_machine_number || "12";
+      const eqId = extracted.equipment_id || `M-${machineNum}`;
 
       const reportData = {
-        equipmentId: extracted.equipment_id || "M-12",
-        equipmentName: extracted.equipment_name || "Machine",
-        equipmentMachineNumber: extracted.equipment_machine_number || "12",
+        equipmentId: eqId,
+        equipmentName: extracted.equipment_name || `Machine ${machineNum}`,
+        equipmentMachineNumber: machineNum,
         issue: extracted.issue || "Reported issue",
         observation: extracted.observation || undefined,
         category: extracted.category || "mechanical",
@@ -182,6 +184,18 @@ export default function ConfirmPage() {
                 </p>
               )}
             </InlineAlert>
+          )}
+
+          {rawResult?.transcription && (
+            <div className="rounded-lg border border-border bg-surface/60 p-3.5">
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <Quote className="h-3.5 w-3.5" />
+                <span>Original Voice Transcription ({language})</span>
+              </div>
+              <p className="mt-1.5 text-sm italic text-foreground leading-relaxed">
+                "{rawResult.transcription}"
+              </p>
+            </div>
           )}
 
           <ExtractionReview fields={fields} onUpdate={handleUpdate} />

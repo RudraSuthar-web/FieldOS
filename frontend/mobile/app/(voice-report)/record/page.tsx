@@ -2,12 +2,35 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Quote } from "lucide-react";
+import { ArrowRight, Quote, Sparkles } from "lucide-react";
 import { Button, Card, CardContent, InlineAlert, voiceApi } from "@fieldos/shared";
 import type { Language } from "@fieldos/shared";
 import { MobileFrame } from "../../../components/layout/MobileFrame";
 import { VoiceRecorder } from "../../../components/voice/VoiceRecorder";
 import { LanguageSelector } from "../../../components/voice/LanguageSelector";
+
+const SAMPLE_SCENARIOS = [
+  {
+    lang: "gujarati" as Language,
+    label: "Gujarati — Overheating",
+    text: "Machine number 12 ma motor overheating thay chhe, vibration pan vadhi gayu chhe.",
+  },
+  {
+    lang: "hindi" as Language,
+    label: "Hindi — Vibration & Heat",
+    text: "मशीन नंबर 12 में मोटर ओवरहीट हो रही है और वाइब्रेशन बढ़ गया है।",
+  },
+  {
+    lang: "hinglish" as Language,
+    label: "Hinglish — Inspection",
+    text: "Machine number 12 me motor overheating ho rahi hai, vibration check karna hai.",
+  },
+  {
+    lang: "english" as Language,
+    label: "English — Motor Anomaly",
+    text: "Machine number 12 motor is overheating and vibration has significantly increased.",
+  },
+];
 
 export default function RecordPage() {
   const router = useRouter();
@@ -38,6 +61,27 @@ export default function RecordPage() {
     [language]
   );
 
+  const handleUseScenario = useCallback(
+    async (text: string, lang: Language) => {
+      setLanguage(lang);
+      setError("");
+      setTranscription("");
+      setExtracted(null);
+      setIsProcessing(true);
+      try {
+        const result = await voiceApi.transcribe(text, lang);
+        setTranscription(result.transcription);
+        setExtracted(result.extracted);
+        sessionStorage.setItem("fieldos_voice_result", JSON.stringify(result));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Processing failed. Please try again.");
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    []
+  );
+
   const ready = !isProcessing && !!transcription && !!extracted;
 
   return (
@@ -63,6 +107,27 @@ export default function RecordPage() {
       </section>
 
       <VoiceRecorder className="mt-6" onComplete={handleRecorded} isProcessing={isProcessing} />
+
+      <div className="mt-4 rounded-lg border border-dashed border-border bg-surface/50 p-3">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          <Sparkles className="h-3.5 w-3.5 text-primary" />
+          <span>Or test with a sample voice report</span>
+        </div>
+        <div className="mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          {SAMPLE_SCENARIOS.map((s) => (
+            <button
+              key={s.label}
+              type="button"
+              disabled={isProcessing}
+              onClick={() => handleUseScenario(s.text, s.lang)}
+              className="flex flex-col items-start rounded-md border border-border/60 bg-background/80 p-2 text-left text-xs transition-colors hover:bg-accent hover:border-primary/50 disabled:opacity-50"
+            >
+              <span className="font-semibold text-foreground">{s.label}</span>
+              <span className="mt-0.5 line-clamp-1 text-muted-foreground">{s.text}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {error && (
         <InlineAlert variant="danger" className="mt-4">

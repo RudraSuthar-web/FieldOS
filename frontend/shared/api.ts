@@ -250,9 +250,13 @@ export const techniciansApi = {
 // Voice
 // ---------------------------------------------------------------------------
 export const voiceApi = {
-  transcribe: (audioBlob: Blob, language: string) => {
+  transcribe: (audioOrHint: Blob | string, language: string) => {
     const formData = new FormData();
-    formData.append("audio", audioBlob);
+    if (typeof audioOrHint === "string") {
+      formData.append("transcript_hint", audioOrHint);
+    } else {
+      formData.append("audio", audioOrHint);
+    }
     formData.append("language", language);
     return apiRequest<{ transcription: string; language: string; extracted: any }>(
       "/api/v1/voice/transcribe",
